@@ -26,9 +26,9 @@ setup_clients(Count) ->
 
 zerpc_test_() ->
     {setup, fun setup/0, fun cleanup/1, [
-            %{"call", ?WITH_CLIENT(1, pingpong)},
-            %{"error return", ?WITH_CLIENT(1, error_return)},
-            %{"throw", ?WITH_CLIENT(1, throw_return)},
+            {"call", ?WITH_CLIENT(1, pingpong)},
+            {"error return", ?WITH_CLIENT(1, error_return)},
+            {"throw", ?WITH_CLIENT(1, throw_return)},
             {"erlang error", ?WITH_CLIENT(1, erlang_error)}
         ]}.
 
