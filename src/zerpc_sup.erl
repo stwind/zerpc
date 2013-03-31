@@ -30,7 +30,7 @@ init([]) ->
 %% ===================================================================
 
 children() ->
-    case zerpc_util:get_env(endpoint, client) of
+    case zerpc_util:get_env(mode, client) of
         server ->
             [server(), router(), worker_pool()];
         client ->
