@@ -58,6 +58,14 @@ terminate(_Reason, State) ->
 
 
 do_request(Req, #state{socket = Socket}) ->
-    ok = erlzmq:send(Socket, Req),
-    {ok, Rep} = erlzmq:recv(Socket),
-    Rep.
+    case erlzmq:send(Socket, Req) of
+        {error, eagain} ->
+            {error, timeout};
+        ok ->
+            case erlzmq:recv(Socket) of
+                {error, eagain} ->
+                    {error, timeout};
+                {ok, Rep} ->
+                    {ok, Rep}
+            end
+    end.
