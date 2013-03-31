@@ -1,0 +1,1 @@
+-define(POOL, zerpc_pool).

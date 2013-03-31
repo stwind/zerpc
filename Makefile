@@ -8,25 +8,18 @@ APP := zerpc
 
 BASIC_PLT := $(APP).plt
 
-CURRENT_BRANCH := $(shell git branch --no-color 2> /dev/null | grep \* | cut -d " " -f 2)
-ifeq (master, $(CURRENT_BRANCH))
-REBAR_EXE := $(REBAR) -C rebar.config.lock
-else
-REBAR_EXE := $(REBAR) -C rebar.config
-endif
-
 .PHONY: all deps clean test ct xref docs lock-deps
 
 all: app
 
 app: $(REBAR) deps
-	@$(REBAR_EXE) compile
+	@$(REBAR) compile
 
 deps: $(REBAR) 
-	@$(REBAR_EXE) get-deps
+	@$(REBAR) get-deps
 
 clean: $(REBAR)
-	@$(REBAR_EXE) clean
+	@$(REBAR) clean
 
 ifndef SUITES
 EUNIT_SUITES =
@@ -34,15 +27,15 @@ else
 EUNIT_SUITES = suites=$(SUITES)
 endif
 test: $(REBAR) app
-	@$(REBAR_EXE) eunit skip_deps=true $(EUNIT_SUITES)
+	@$(REBAR) eunit skip_deps=true $(EUNIT_SUITES)
 
 ct: $(REBAR) app
-	@$(REBAR_EXE) ct skip_deps=true
+	@$(REBAR) ct skip_deps=true
 
 rel: app rel/$(APP)
 
 rel/$(APP):
-	@$(REBAR_EXE) generate
+	@$(REBAR) generate
 
 relclean:
 	@rm -rf rel/$(APP)
@@ -57,13 +50,13 @@ dialyze: $(BASIC_PLT)
 		-Wrace_conditions -Wunmatched_returns # -Wunderspecs
 
 xref: $(REBAR) clean app
-	@$(REBAR_EXE) xref skip_deps=true
+	@$(REBAR) xref skip_deps=true
 
 docs: $(REBAR)
-	@$(REBAR_EXE) doc skip_deps=true
+	@$(REBAR) doc skip_deps=true
 
 lock-deps: $(REBAR) app
-	@$(REBAR_EXE) lock-deps ignore=meck,proper,rebar
+	@$(REBAR) lock-deps ignore=meck,proper,rebar
 
 bin/%:
 	@mkdir -p $(DEPS) $(BIN)
