@@ -6,6 +6,7 @@
         code_change/3]).
 
 -include("internal.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 -export([start_link/0]).
 -export([process/2]).

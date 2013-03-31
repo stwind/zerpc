@@ -8,6 +8,8 @@
 -export([start_link/2]).
 -export([reply/2]).
 
+-include_lib("eunit/include/eunit.hrl").
+
 -record(state, {
         context :: term(),
         socket  :: term(),

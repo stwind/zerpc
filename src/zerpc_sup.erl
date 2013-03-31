@@ -8,6 +8,8 @@
 %% Supervisor callbacks
 -export([init/1]).
 
+-include("internal.hrl").
+
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
 
@@ -40,6 +42,7 @@ children(Context) ->
 client(Context) ->
     PoolSize = zerpc_util:get_env(pool_size, 100),
     PoolArgs = [
+        {name, {local, ?CLIENT_POOL}},
         {worker_module, zerpc_client},
         {size, PoolSize},
         {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
@@ -61,6 +64,7 @@ router() ->
 worker_pool() ->
     PoolSize = zerpc_util:get_env(pool_size, 100),
     PoolArgs = [
+        {name, {local, ?SERVER_POOL}},
         {worker_module, zerpc_worker},
         {size, PoolSize},
         {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}

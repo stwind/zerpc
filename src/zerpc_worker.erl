@@ -5,6 +5,8 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
         code_change/3]).
 
+-include_lib("eunit/include/eunit.hrl").
+
 -export([start_link/1]).
 -export([do/3]).
 
@@ -17,8 +19,8 @@
 start_link([]) ->
     gen_server:start_link(?MODULE, [], []).
 
-do(Pid, Ctx, Req) ->
-    gen_server:cast(Pid, {request, Ctx, Req}).
+do(Pid, Ctx, Msg) ->
+    gen_server:cast(Pid, {request, Ctx, Msg}).
 
 %% ===================================================================
 %% gen_server
@@ -30,7 +32,7 @@ init([]) ->
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({process, Ctx, Msg}, State) ->
+handle_cast({request, Ctx, Msg}, State) ->
     handle_request(Ctx, Msg, State),
     {noreply, State};
 
@@ -79,8 +81,14 @@ error_reply(Type) ->
 
 error_reply(Type0, BackTrace) ->
     {Code, Reason} = explain(Type0),
-    Type = zerpc_util:to_binary(Type0),
-    {server, Code, Type, Reason, fmt_bt(BackTrace)}.
+    Type = zerpc_util:to_binary(type(Type0)),
+    Error = {server, Code, Type, Reason, fmt_bt(BackTrace)},
+    zerpc_proto:error(Error).
+
+type(Type) when is_tuple(Type) ->
+    element(1, Type);
+type(Type) ->
+    Type.
 
 explain(badrpc) ->
     {100, <<"invalid rpc command">>};
