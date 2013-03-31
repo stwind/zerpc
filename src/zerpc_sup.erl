@@ -3,7 +3,7 @@
 -behaviour(supervisor).
 
 %% API
--export([start_link/0]).
+-export([start_link/1]).
 
 %% Supervisor callbacks
 -export([init/1]).
@@ -15,36 +15,43 @@
 %% API functions
 %% ===================================================================
 
-start_link() ->
-    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+start_link(Context) ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, [Context]).
 
 %% ===================================================================
 %% Supervisor callbacks
 %% ===================================================================
 
-init([]) ->
-    {ok, { {one_for_one, 5, 10}, children()} }.
+init([Context]) ->
+    {ok, { {one_for_one, 5, 10}, children(Context)} }.
 
 %% ===================================================================
 %% Private
 %% ===================================================================
 
-children() ->
+children(Context) ->
     case zerpc_util:get_env(mode, client) of
         server ->
-            [server(), router(), worker_pool()];
+            [server(Context), router(), worker_pool()];
         client ->
-            [client()]
+            [client(Context)]
     end.
 
-client() ->
+client(Context) ->
+    PoolSize = zerpc_util:get_env(pool_size, 100),
+    PoolArgs = [
+        {worker_module, zerpc_client},
+        {size, PoolSize},
+        {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
+    ],
     Endpoint = zerpc_util:get_env(endpoint, "tcp://127.0.0.1:5556"),
-    {zerpc_client, {zerpc_client, start_link, [Endpoint]}, permanent,
-        5000, worker, [zerpc_client]}.
+    WorkerArgs = {Endpoint, Context},
+    {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
+        permanent, 5000, worker, [poolboy]}.
 
-server() ->
+server(Context) ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
-    {zerpc_server, {zerpc_server, start_link, [Endpoint]}, permanent,
+    {zerpc_server, {zerpc_server, start_link, [Endpoint, Context]}, permanent,
         5000, worker, [zerpc_server]}.
 
 router() ->

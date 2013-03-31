@@ -10,7 +10,10 @@
 %% ===================================================================
 
 start(_StartType, _StartArgs) ->
-    zerpc_sup:start_link().
+    {ok, Context} = erlzmq:context(1),
+    {ok, Sup} = zerpc_sup:start_link(Context),
+    {ok, Sup, Context}.
 
-stop(_State) ->
+stop(Context) ->
+    ok = erlzmq:term(Context),
     ok.

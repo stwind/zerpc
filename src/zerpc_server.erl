@@ -5,7 +5,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
         code_change/3]).
 
--export([start_link/1]).
+-export([start_link/2]).
 -export([reply/2]).
 
 -record(state, {
@@ -18,8 +18,8 @@
 %% Public
 %% ===================================================================
 
-start_link(Endpoint) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Endpoint], []).
+start_link(Endpoint, Context) ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [Endpoint, Context], []).
 
 reply(Ctx, Message) ->
     gen_server:cast(?MODULE, {reply, Ctx, Message}).
@@ -28,8 +28,7 @@ reply(Ctx, Message) ->
 %% gen_server
 %% ===================================================================
 
-init([Endpoint]) ->
-    {ok, Context} = erlzmq:context(1),
+init([Endpoint, Context]) ->
     {ok, Socket}  = erlzmq:socket(Context, [router, {active, true}]),
     ok = erlzmq:bind(Socket, Endpoint),
     {ok, #state{socket = Socket, context = Context}}.
@@ -67,8 +66,7 @@ code_change(_FromVsn, _ToVsn, State) ->
     {ok, State}.
 
 terminate(_Reason, State) ->
-    erlzmq:close(State#state.socket),
-    erlzmq:term(State#state.context).
+    erlzmq:close(State#state.socket).
 
 %% ===================================================================
 %% Private

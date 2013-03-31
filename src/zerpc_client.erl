@@ -5,30 +5,35 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
         code_change/3]).
 
+-include("internal.hrl").
+
+-export([start_link/1]).
+-export([request/1]).
+
 -record(state, {
         context :: term(),
         socket  :: term()
 }).
 
--export([start_link/1]).
--export([request/1]).
-
 %% ===================================================================
 %% Public
 %% ===================================================================
 
-start_link(Endpoint) ->
-    gen_server:start_link({local, ?MODULE}, ?MODULE, [Endpoint], []).
+start_link({Endpoint, Context}) ->
+    gen_server:start_link(?MODULE, [Endpoint, Context], []).
 
+%% TODO: add timeout param
 request(Req) ->
-    gen_server:call(?MODULE, {request, Req}).
+    Worker = poolboy:checkout(?CLIENT_POOL),
+    Res = gen_server:call(Worker, {request, Req}),
+    poolboy:checkin(?CLIENT_POOL, Worker),
+    Res.
 
 %% ===================================================================
 %% gen_server
 %% ===================================================================
 
-init([Endpoint]) ->
-    {ok, Context} = erlzmq:context(1),
+init([Endpoint, Context]) ->
     {ok, Socket}  = erlzmq:socket(Context, req),
     ok = erlzmq:connect(Socket, Endpoint),
     {ok, #state{socket = Socket, context = Context}}.
@@ -49,13 +54,11 @@ code_change(_FromVsn, _ToVsn, State) ->
     {ok, State}.
 
 terminate(_Reason, State) ->
-    erlzmq:close(State#state.socket),
-    erlzmq:term(State#state.context).
+    erlzmq:close(State#state.socket).
 
 %% ===================================================================
 %% Private
 %% ===================================================================
-
 
 do_request(Req, #state{socket = Socket}) ->
     case erlzmq:send(Socket, Req) of

@@ -1,1 +1,2 @@
--define(POOL, zerpc_pool).
+-define(SERVER_POOL, zerpc_server_pool).
+-define(CLIENT_POOL, zerpc_client_pool).
