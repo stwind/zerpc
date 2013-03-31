@@ -3,11 +3,6 @@
 -export([call/4]).
 -export([cast/4]).
 
--type arguments() :: [term()].
--type request() :: {call, module(), function(), arguments()}.
-
--export_type([request/0]).
-
 %% ===================================================================
 %% Public
 %% ===================================================================

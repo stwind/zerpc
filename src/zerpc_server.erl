@@ -29,7 +29,7 @@ reply(Ctx, Message) ->
 %% ===================================================================
 
 init([Endpoint]) ->
-    {ok, Context} = erlzmq:context(),
+    {ok, Context} = erlzmq:context(1),
     {ok, Socket}  = erlzmq:socket(Context, [router, {active, true}]),
     ok = erlzmq:bind(Socket, Endpoint),
     {ok, #state{socket = Socket, context = Context}}.

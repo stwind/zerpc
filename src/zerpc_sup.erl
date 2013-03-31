@@ -23,12 +23,24 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    Children = [server(), router(), worker_pool()],
-    {ok, { {one_for_one, 5, 10}, Children} }.
+    {ok, { {one_for_one, 5, 10}, children()} }.
 
 %% ===================================================================
 %% Private
 %% ===================================================================
+
+children() ->
+    case zerpc_util:get_env(endpoint, client) of
+        server ->
+            [server(), router(), worker_pool()];
+        client ->
+            [client()]
+    end.
+
+client() ->
+    Endpoint = zerpc_util:get_env(endpoint, "tcp://127.0.0.1:5556"),
+    {zerpc_client, {zerpc_client, start_link, [Endpoint]}, permanent,
+        5000, worker, [zerpc_client]}.
 
 server() ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
