@@ -26,8 +26,10 @@ setup_clients(Count) ->
 
 zerpc_test_() ->
     {setup, fun setup/0, fun cleanup/1, [
-            {"pingpong", ?WITH_CLIENT(1, pingpong)},
-            {"error return", ?WITH_CLIENT(1, error_return)}
+            %{"call", ?WITH_CLIENT(1, pingpong)},
+            %{"error return", ?WITH_CLIENT(1, error_return)},
+            %{"throw", ?WITH_CLIENT(1, throw_return)},
+            {"erlang error", ?WITH_CLIENT(1, erlang_error)}
         ]}.
 
 %% ===================================================================
@@ -39,8 +41,17 @@ pingpong([Client]) ->
     ?assertMatch(ping, call(Client, zerpc, call, [server, pong, []])).
 
 error_return([Client]) ->
-    {error, Reason} = call(Client, zerpc, call, [server, error, [whatever]]),
+    {error, Reason} = call(Client, zerpc, call, [server, error_return, [whatever]]),
     ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
+
+throw_return([Client]) ->
+    {error, Reason} = call(Client, zerpc, call, [server, throw, [{error, whatever}]]),
+    ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
+
+erlang_error([Client]) ->
+    {error, Reason} = call(Client, zerpc, call, [server, error, [badarg]]),
+    {zerpc_error, {server, _, _, _, Trace}} = Reason,
+    ?assertMatch([<<"server:error/1", _/binary>> | _], Trace).
 
 %% ===================================================================
 %% Helpers
