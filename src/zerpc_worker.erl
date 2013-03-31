@@ -7,7 +7,6 @@
 
 -export([start_link/0]).
 -export([do/3]).
--export([error_reply/1]).
 
 -record(state, { }).
 
@@ -99,12 +98,8 @@ explain(_) ->
 fmt_bt(BT) ->
     [fmt_call(C) || C <- BT].
 
-fmt_call({M, F, A, []}) ->
-    fmt_mfa(M, F, A);
-fmt_call({M, F, A, [{file,File0},{line,Line0}]}) ->
-    File = zerpc_util:to_binary(File0),
-    Line = zerpc_util:to_binary(Line0),
-    <<(fmt_mfa(M,F,A))/binary," (",File/binary,":",Line/binary,")">>.
+fmt_call({M, F, A, Meta}) ->
+    <<(fmt_mfa(M,F,A))/binary,(fmt_meta(Meta))/binary>>.
 
 fmt_mfa(M0, F0, A0) ->
     M = zerpc_util:to_binary(M0),
@@ -116,3 +111,10 @@ fmt_mfa(M0, F0, A0) ->
             zerpc_util:to_binary(length(A0))
     end,
     <<M/binary,":",F/binary,"/",A/binary>>.
+
+fmt_meta([]) ->
+    <<>>;
+fmt_meta([{file,File0},{line,Line0}]) ->
+    File = zerpc_util:to_binary(File0),
+    Line = zerpc_util:to_binary(Line0),
+    <<" (",File/binary,":",Line/binary,")">>.
