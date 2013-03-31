@@ -23,7 +23,7 @@ start_link() ->
 %% ===================================================================
 
 init([]) ->
-    Children = [server(), worker_pool()],
+    Children = [server(), router(), worker_pool()],
     {ok, { {one_for_one, 5, 10}, Children} }.
 
 %% ===================================================================
@@ -34,6 +34,10 @@ server() ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
     {zerpc_server, {zerpc_server, start_link, [Endpoint]}, permanent,
         5000, worker, [zerpc_server]}.
+
+router() ->
+    {zerpc_router, {zerpc_router, start_link, []}, permanent,
+        5000, worker, [zerpc_router]}.
 
 worker_pool() ->
     PoolSize = zerpc_util:get_env(pool_size, 100),
