@@ -38,19 +38,19 @@ zerpc_test_() ->
 %% ===================================================================
 
 pingpong([Client]) ->
-    ?assertMatch(pong, call(Client, zerpc, call, [server, ping, []])),
-    ?assertMatch(ping, call(Client, zerpc, call, [server, pong, []])).
+    ?assertMatch(pong, call_server(Client, ping, [])),
+    ?assertMatch(ping, call_server(Client, pong, [])).
 
 error_return([Client]) ->
-    {error, Reason} = call(Client, zerpc, call, [server, error_return, [whatever]]),
+    {error, Reason} = call_server(Client, error_return, [whatever]),
     ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
 
 throw_return([Client]) ->
-    {error, Reason} = call(Client, zerpc, call, [server, throw, [{error, whatever}]]),
+    {error, Reason} = call_server(Client, throw, [{error, whatever}]),
     ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
 
 erlang_error([Client]) ->
-    {error, Reason} = call(Client, zerpc, call, [server, error, [badarg]]),
+    {error, Reason} = call_server(Client, error, [badarg]),
     {zerpc_error, {server, _, _, _, Trace}} = Reason,
     ?assertMatch([<<"server:error/1", _/binary>> | _], Trace).
 
@@ -69,6 +69,9 @@ zerpc_env(Node, Mode) ->
     call(Node, application, set_env, [zerpc, mode, Mode]),
     call(Node, application, set_env, [zerpc, endpoint, ?ENDPOINT]),
     call(Node, application, set_env, [zerpc, pool_size, 5]).
+
+call_server(Client, Fun, Args) ->
+    call(Client, zerpc, call, [server, Fun, Args]).
 
 call(Node, Mod, Fun, Args) ->
     rpc:call(Node, Mod, Fun, Args).
