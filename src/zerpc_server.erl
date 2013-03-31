@@ -78,7 +78,7 @@ terminate(_Reason, State) ->
 
 incoming_request(Msg, Peer) ->
     Ctx = zerpc_ctx:new(Peer),
-    zerpc_handler:process(Ctx, Msg).
+    zerpc_router:process(Ctx, Msg).
 
 send_reply(Ctx, Message, #state{socket = Socket}) ->
     Peer = zerpc_ctx:peer(Ctx),

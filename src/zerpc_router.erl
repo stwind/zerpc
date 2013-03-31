@@ -1,4 +1,4 @@
--module(zerpc_handler).
+-module(zerpc_router).
 
 -behaviour(gen_server).
 
