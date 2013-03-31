@@ -8,7 +8,8 @@
 -define(POOL_SIZE, 5).
 
 -define(WITH_CLIENT(Count, Case), {setup,
-        fun() -> setup_clients(Count) end,
+        fun() -> start_clients(Count) end,
+        fun(Nodes) -> [slave:stop(N) || N <- Nodes] end,
         fun(Nodes) -> ?_test(Case(Nodes)) end
     }).
 
@@ -20,7 +21,7 @@ setup() ->
 cleanup(_) ->
     application:stop(zerpc).
 
-setup_clients(Count) ->
+start_clients(Count) ->
     Name = fun(N) -> list_to_atom("client" ++ integer_to_list(N)) end,
     [new_client(Name(N)) || N <- lists:seq(1, Count)].
 
