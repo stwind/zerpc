@@ -56,10 +56,8 @@ handle_info({zmq, Socket, Message, [rcvmore]}, #state{
     %% first message part is peer identity
     {noreply, State#state{peer = Message}};
 
-handle_info({zmq, Socket, Message, []}, #state{
-        socket = Socket, peer = Peer
-    } = State) ->
-    incoming_request(Message, Peer),
+handle_info({zmq, Socket, Message, []}, #state{socket = Socket} = State) ->
+    incoming_request(Message, State),
     {noreply, State#state{peer = undefined}};
 
 handle_info(_Info, State) ->
@@ -76,7 +74,7 @@ terminate(_Reason, State) ->
 %% Private
 %% ===================================================================
 
-incoming_request(Msg, Peer) ->
+incoming_request(Msg, #state{peer = Peer}) ->
     Ctx = zerpc_ctx:new(Peer),
     zerpc_router:process(Ctx, Msg).
 
@@ -85,3 +83,12 @@ send_reply(Ctx, Message, #state{socket = Socket}) ->
     ok = erlzmq:send(Socket, Peer, [sndmore]),
     ok = erlzmq:send(Socket, <<>>, [sndmore]),
     ok = erlzmq:send(Socket, Message).
+
+%% ===================================================================
+%% Eunit
+%% ===================================================================
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+-endif.

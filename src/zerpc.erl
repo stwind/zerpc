@@ -26,9 +26,7 @@ cast(Endpoint, Mod, Fun, Args) ->
 %% Private
 %% ===================================================================
 
-handle_result({noreply}) ->
-    ok;
-handle_result({reply, Result}) ->
-    Result;
 handle_result({error, Error}) ->
-    {error, {zerpc_error, Error}}.
+    {error, {zerpc_error, Error}};
+handle_result(Res) ->
+    Res.

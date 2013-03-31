@@ -44,7 +44,7 @@ validate({cast, M, F, A} = Req) when ?IS_MFA(M, F, A) ->
 validate({reply, Result}) ->
     Result;
 validate({noreply}) ->
-    noreply;
+    ok;
 validate({error, {R,C,T,D,S}} = Error) when ?IS_ERR(R,C,T,D,S) ->
     Error;
 validate(_) ->
@@ -55,3 +55,22 @@ encode(Term) ->
 
 decode(Binary) ->
     bert:decode(Binary).
+
+%% ===================================================================
+%% Eunit
+%% ===================================================================
+
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+
+proto_test_() ->
+    [
+        {"call", ?_assertMatch({call, m, f, []}, parse(call(m, f, [])))},
+        {"cast", ?_assertMatch({cast, m, f, []}, parse(cast(m, f, [])))},
+        {"reply", ?_assertMatch(result, parse(reply(result)))},
+        {"noreply", ?_assertMatch(ok, parse(noreply()))},
+        {"error", ?_assertMatch({error,{server, 100, <<"type">>, <<"class">>, []}}, 
+                parse(?MODULE:error({server, 100, <<"type">>, <<"class">>, []})))}
+    ].
+
+-endif.
