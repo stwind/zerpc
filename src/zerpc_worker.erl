@@ -72,7 +72,7 @@ call_service({call, Mod, Fun, Args}) ->
             zerpc_proto:reply(Result)
     end;
 call_service({cast, Mod, Fun, Args}) ->
-    erlang:apply(Mod, Fun, Args),
+    proc_lib:spawn(Mod, Fun, Args),
     zerpc_proto:noreply().
 
 error_reply(Type) ->
