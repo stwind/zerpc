@@ -53,10 +53,12 @@ explain({fun_undef, Mod0, Fun0, Arity0}) ->
     Arity = zerpc_util:to_binary(Arity0),
     {101, <<"undefined function ", 
         Mod/binary, ":", Fun/binary, "/", Arity/binary>>};
-explain({internal_error, _}) ->
-    {900, <<"internal server error">>};
-explain(_) ->
-    {901, <<"internal server error">>}.
+explain({internal_error, Reason}) ->
+    ReasonBin = list_to_binary(io_lib:format("~p",[Reason])),
+    {900, <<"server error: ", ReasonBin/binary>>};
+explain(Reason) ->
+    ReasonBin = list_to_binary(io_lib:format("~p",[Reason])),
+    {901, <<"internal server error: ", ReasonBin/binary>>}.
 
 fmt_bt(BT) ->
     [fmt_call(C) || C <- BT].

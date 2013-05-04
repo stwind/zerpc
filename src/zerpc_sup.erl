@@ -9,6 +9,7 @@
 -export([init/1]).
 
 -include("internal.hrl").
+-include_lib("eunit/include/eunit.hrl").
 
 %% Helper macro for declaring children of supervisor
 -define(CHILD(I, Type), {I, {I, start_link, []}, permanent, 5000, Type, [I]}).
@@ -25,7 +26,8 @@ start_link(Context) ->
 %% ===================================================================
 
 init([Context]) ->
-    {ok, { {one_for_one, 5, 10}, children(Context)} }.
+    Children = children(Context),
+    {ok, { {one_for_one, 5, 10}, Children} }.
 
 %% ===================================================================
 %% Private
