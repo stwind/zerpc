@@ -1,5 +1,7 @@
 # zerpc - ZeroMQ Erlang RPC
 
+[![Build Status](https://travis-ci.org/stwind/zerpc.png)](https://travis-ci.org/stwind/zerpc)
+
 RPC through [ZeroMQ](http://www.zeromq.org/) for Erlang.
 
 ## Motivation
