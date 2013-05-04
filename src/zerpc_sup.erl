@@ -51,8 +51,12 @@ client(Context, {Name, Options}) ->
         {size, Size},
         {max_overflow, proplists:get_value(overflow, Options, Size * 2)}
     ],
-    Endpoint = proplists:get_value(endpoint, Options, "tcp://127.0.0.1:5556"),
-    WorkerArgs = {Endpoint, Context},
+    WorkerArgs = [
+        {context, Context},
+        {endpoint, proplists:get_value(endpoint, Options, "tcp://127.0.0.1:5556")},
+        {send_timeout, zerpc_util:get_env(send_timeout, 5000)},
+        {recv_timeout, zerpc_util:get_env(recv_timeout, 5000)}
+    ],
     Id = list_to_atom("zerpc_woker_pool_" ++ atom_to_list(Name)),
     {Id, {poolboy, start_link, [PoolArgs, WorkerArgs]},
         permanent, 5000, worker, [poolboy]}.
@@ -75,6 +79,6 @@ worker_pool() ->
         {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
     ],
     Hooks = zerpc_util:get_env(hooks, [zerpc_mfa]),
-    WorkerArgs = [Hooks],
+    WorkerArgs = [{hooks, Hooks}],
     {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
         permanent, 5000, worker, [poolboy]}.

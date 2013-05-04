@@ -22,8 +22,8 @@
 %% Public
 %% ===================================================================
 
-start_link({Endpoint, Context}) ->
-    gen_server:start_link(?MODULE, [Endpoint, Context], []).
+start_link(Options) ->
+    gen_server:start_link(?MODULE, Options, []).
 
 request(Pool, Req) ->
     request(Pool, Req, ?TIMEOUT).
@@ -38,8 +38,14 @@ request(Pool, Req, Timeout) ->
 %% gen_server
 %% ===================================================================
 
-init([Endpoint, Context]) ->
+init(Options) ->
+    Context = proplists:get_value(context, Options),
+    Endpoint = proplists:get_value(endpoint, Options),
+    SendTimeout = proplists:get_value(send_timeout, Options),
+    RecvTimeout = proplists:get_value(recv_timeout, Options),
     {ok, Socket}  = erlzmq:socket(Context, req),
+    ok = erlzmq:setsockopt(Socket, sndtimeo, SendTimeout),
+    ok = erlzmq:setsockopt(Socket, rcvtimeo, RecvTimeout),
     ok = erlzmq:connect(Socket, Endpoint),
     {ok, #state{socket = Socket, context = Context}}.
 

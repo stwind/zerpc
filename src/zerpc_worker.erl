@@ -18,8 +18,8 @@
 %% Public
 %% ===================================================================
 
-start_link([Hooks]) ->
-    gen_server:start_link(?MODULE, [Hooks], []).
+start_link(Options) ->
+    gen_server:start_link(?MODULE, Options, []).
 
 do(Pid, Req) ->
     gen_server:cast(Pid, {request, Req}).
@@ -28,8 +28,8 @@ do(Pid, Req) ->
 %% gen_server
 %% ===================================================================
 
-init([Hooks]) ->
-    {ok, #state{hooks = Hooks}}.
+init(Options) ->
+    {ok, #state{hooks = proplists:get_value(hooks, Options)}}.
 
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
