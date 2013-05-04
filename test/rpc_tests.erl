@@ -14,11 +14,12 @@
     }).
 
 setup() ->
-    {ok, _} = net_kernel:start(['server', shortnames]),
+    {ok, _} = net_kernel:start(['server@127.0.0.1', longnames]),
     zerpc_env(node(), server),
     application:start(zerpc).
 
 cleanup(_) ->
+    net_kernel:stop(),
     application:stop(zerpc).
 
 start_clients(Count) ->
@@ -60,7 +61,7 @@ erlang_error([Client]) ->
 
 new_client(Name) ->
     Args = "-env ERL_LIBS ../deps -pa ../ebin",
-    {ok, Node} = slave:start(localhost, Name, Args),
+    {ok, Node} = slave:start('127.0.0.1', Name, Args),
     zerpc_env(Node, client),
     ok = call(Node, application, start, [zerpc]),
     Node.
