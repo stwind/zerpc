@@ -50,7 +50,7 @@ server
 
 And we start another vm, and start zerpc in client mode, with cookie `client`. Then we remotely call server's functions using similary semantic to erlang's built-in rpc. And they are not in the same cluster.
 
-### Settings
+## Settings
 
 ### Server
 
@@ -80,7 +80,26 @@ And we start another vm, and start zerpc in client mode, with cookie `client`. T
   ]}
 ```
 
+## Development
 
+Compile
+```
+make
+```
+
+Run test cases
+```
+make test
+```
+
+Run in dev mode
+```
+./start-dev.sh
+```
+
+## Authors
+
+* [stwind](https://github.com/stwind/)
 
 
 
