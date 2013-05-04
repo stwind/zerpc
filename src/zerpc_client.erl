@@ -11,6 +11,8 @@
 -export([start_link/1]).
 -export([request/2]).
 
+-define(TIMEOUT, 5000).
+
 -record(state, {
         context :: term(),
         socket  :: term()
@@ -23,10 +25,12 @@
 start_link({Endpoint, Context}) ->
     gen_server:start_link(?MODULE, [Endpoint, Context], []).
 
-%% TODO: add timeout param
 request(Pool, Req) ->
+    request(Pool, Req, ?TIMEOUT).
+
+request(Pool, Req, Timeout) ->
     Worker = poolboy:checkout(Pool),
-    Res = gen_server:call(Worker, {request, Req}),
+    Res = gen_server:call(Worker, {request, Req}, Timeout),
     poolboy:checkin(Pool, Worker),
     Res.
 
