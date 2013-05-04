@@ -1,24 +1,24 @@
 -module(zerpc).
 
--export([call/3]).
--export([cast/3]).
+-export([call/4]).
+-export([cast/4]).
 
 %% ===================================================================
 %% Public
 %% ===================================================================
 
-call(Mod, Fun, Args) ->
-    send_req(zerpc_proto:call(Mod, Fun, Args)).
+call(Pool, Mod, Fun, Args) ->
+    send_req(Pool, zerpc_proto:call(Mod, Fun, Args)).
 
-cast(Mod, Fun, Args) ->
-    send_req(zerpc_proto:cast(Mod, Fun, Args)).
+cast(Pool, Mod, Fun, Args) ->
+    send_req(Pool, zerpc_proto:cast(Mod, Fun, Args)).
 
 %% ===================================================================
 %% Private
 %% ===================================================================
 
-send_req(Req) ->
-    case zerpc_client:request(Req) of
+send_req(Pool, Req) ->
+    case zerpc_client:request(Pool, Req) of
         {ok, Reply} ->
             case zerpc_proto:parse(Reply) of
                 {error, Error} ->

@@ -9,7 +9,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -export([start_link/1]).
--export([request/1]).
+-export([request/2]).
 
 -record(state, {
         context :: term(),
@@ -24,8 +24,8 @@ start_link({Endpoint, Context}) ->
     gen_server:start_link(?MODULE, [Endpoint, Context], []).
 
 %% TODO: add timeout param
-request(Req) ->
-    Worker = poolboy:checkout(?CLIENT_POOL),
+request(Pool, Req) ->
+    Worker = poolboy:checkout(Pool),
     Res = gen_server:call(Worker, {request, Req}),
     poolboy:checkin(?CLIENT_POOL, Worker),
     Res.

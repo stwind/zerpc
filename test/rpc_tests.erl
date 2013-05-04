@@ -65,13 +65,18 @@ new_client(Name) ->
     ok = call(Node, application, start, [zerpc]),
     Node.
 
-zerpc_env(Node, Mode) ->
-    call(Node, application, set_env, [zerpc, mode, Mode]),
+zerpc_env(Node, server) ->
+    call(Node, application, set_env, [zerpc, mode, server]),
     call(Node, application, set_env, [zerpc, endpoint, ?ENDPOINT]),
-    call(Node, application, set_env, [zerpc, pool_size, 5]).
+    call(Node, application, set_env, [zerpc, size, 5]);
+zerpc_env(Node, client) ->
+    call(Node, application, set_env, [zerpc, mode, client]),
+    call(Node, application, set_env, [zerpc, pools, [
+                {p1, [{endpoint, ?ENDPOINT},{size, 5}]}
+            ]]).
 
 call_server(Client, Fun, Args) ->
-    call(Client, zerpc, call, [server, Fun, Args]).
+    call(Client, zerpc, call, [p1, server, Fun, Args]).
 
 call(Node, Mod, Fun, Args) ->
     rpc:call(Node, Mod, Fun, Args).

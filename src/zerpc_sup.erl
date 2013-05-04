@@ -36,20 +36,25 @@ children(Context) ->
         server ->
             [server(Context), router(), worker_pool()];
         client ->
-            [client(Context)]
+            lists:flatten([clients(Context)])
     end.
 
-client(Context) ->
-    PoolSize = zerpc_util:get_env(pool_size, 100),
+clients(Context) ->
+    Pools = zerpc_util:get_env(pools, []),
+    [client(Context, P) || P <- Pools].
+
+client(Context, {Name, Options}) ->
+    Size = proplists:get_value(size, Options),
     PoolArgs = [
-        {name, {local, ?CLIENT_POOL}},
+        {name, {local, Name}},
         {worker_module, zerpc_client},
-        {size, PoolSize},
-        {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
+        {size, Size},
+        {max_overflow, proplists:get_value(overflow, Options, Size * 2)}
     ],
-    Endpoint = zerpc_util:get_env(endpoint, "tcp://127.0.0.1:5556"),
+    Endpoint = proplists:get_value(endpoint, Options, "tcp://127.0.0.1:5556"),
     WorkerArgs = {Endpoint, Context},
-    {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
+    Id = list_to_atom("zerpc_woker_pool_" ++ atom_to_list(Name)),
+    {Id, {poolboy, start_link, [PoolArgs, WorkerArgs]},
         permanent, 5000, worker, [poolboy]}.
 
 server(Context) ->
@@ -62,7 +67,7 @@ router() ->
         5000, worker, [zerpc_router]}.
 
 worker_pool() ->
-    PoolSize = zerpc_util:get_env(pool_size, 100),
+    PoolSize = zerpc_util:get_env(size, 100),
     PoolArgs = [
         {name, {local, ?SERVER_POOL}},
         {worker_module, zerpc_worker},
