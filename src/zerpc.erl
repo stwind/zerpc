@@ -27,5 +27,7 @@ send_req(Pool, Req) ->
                     Res
             end;
         {error, Reason} ->
-            {error, Reason}
+            {error, Reason};
+        {'EXIT', {timeout, _}} ->
+            {error, timeout}
     end.

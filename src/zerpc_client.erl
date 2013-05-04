@@ -11,7 +11,7 @@
 -export([start_link/1]).
 -export([request/2]).
 
--define(TIMEOUT, 5000).
+-define(TIMEOUT, 10000).
 
 -record(state, {
         context :: term(),
@@ -30,7 +30,7 @@ request(Pool, Req) ->
 
 request(Pool, Req, Timeout) ->
     Worker = poolboy:checkout(Pool),
-    Res = gen_server:call(Worker, {request, Req}, Timeout),
+    Res = (catch gen_server:call(Worker, {request, Req}, Timeout)),
     poolboy:checkin(Pool, Worker),
     Res.
 
