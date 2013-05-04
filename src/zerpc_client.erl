@@ -27,7 +27,7 @@ start_link({Endpoint, Context}) ->
 request(Pool, Req) ->
     Worker = poolboy:checkout(Pool),
     Res = gen_server:call(Worker, {request, Req}),
-    poolboy:checkin(?CLIENT_POOL, Worker),
+    poolboy:checkin(Pool, Worker),
     Res.
 
 %% ===================================================================
