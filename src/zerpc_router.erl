@@ -9,7 +9,7 @@
 -include_lib("eunit/include/eunit.hrl").
 
 -export([start_link/0]).
--export([process/2]).
+-export([process/1]).
 
 -record(state, {}).
 
@@ -20,8 +20,8 @@
 start_link() ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-process(Ctx, Msg) ->
-    gen_server:cast(?MODULE, {process, Ctx, Msg}).
+process(Req) ->
+    gen_server:cast(?MODULE, {process, Req}).
 
 %% ===================================================================
 %% gen_server
@@ -33,8 +33,8 @@ init([]) ->
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({process, Ctx, Msg}, State) ->
-    handle_msg(Ctx, Msg),
+handle_cast({process, Req}, State) ->
+    handle_msg(Req),
     {noreply, State};
 
 handle_cast(_Cast, State) ->
@@ -53,7 +53,7 @@ terminate(_Reason, _State) ->
 %% Private
 %% ===================================================================
 
-handle_msg(Ctx, Msg) ->
+handle_msg(Req) ->
     Worker = poolboy:checkout(?SERVER_POOL),
-    ok = zerpc_worker:do(Worker, Ctx, Msg),
+    ok = zerpc_worker:do(Worker, Req),
     poolboy:checkin(?SERVER_POOL, Worker).

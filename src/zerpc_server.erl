@@ -23,8 +23,8 @@
 start_link(Endpoint, Context) ->
     gen_server:start_link({local, ?MODULE}, ?MODULE, [Endpoint, Context], []).
 
-reply(Ctx, Message) ->
-    gen_server:cast(?MODULE, {reply, Ctx, Message}).
+reply(Peer, Message) ->
+    gen_server:cast(?MODULE, {reply, Peer, Message}).
 
 %% ===================================================================
 %% gen_server
@@ -38,8 +38,8 @@ init([Endpoint, Context]) ->
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({reply, Ctx, Resp}, State) ->
-    send_reply(Ctx, Resp, State),
+handle_cast({reply, Peer, Resp}, State) ->
+    send_reply(Peer, Resp, State),
     {noreply, State};
 
 handle_cast(_Cast, State) ->
@@ -75,11 +75,10 @@ terminate(_Reason, State) ->
 %% ===================================================================
 
 incoming_request(Msg, #state{peer = Peer}) ->
-    Ctx = zerpc_ctx:new(Peer),
-    zerpc_router:process(Ctx, Msg).
+    Req = zerpc_req:new(Peer, Msg),
+    zerpc_router:process(Req).
 
-send_reply(Ctx, Message, #state{socket = Socket}) ->
-    Peer = zerpc_ctx:peer(Ctx),
+send_reply(Peer, Message, #state{socket = Socket}) ->
     ok = erlzmq:send(Socket, Peer, [sndmore]),
     ok = erlzmq:send(Socket, <<>>, [sndmore]),
     ok = erlzmq:send(Socket, Message).
