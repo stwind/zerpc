@@ -39,4 +39,9 @@ log_error({Cmd, M, F, A}, {server, Code, Type, Reason, Trace}) ->
         {cmd_args, A}, {error_code, Code}, {error_type, Type},
         {reason, Reason}, {trace, Trace}
     ],
-    lager:error(Meta, "~p ~p:~p/~p -> ~p~n~p", [Cmd, M, F, length(A), Reason, Trace]).
+    case Trace of
+        [] ->
+            lager:error(Meta, "~p ~p:~p/~p -> ~p", [Cmd, M, F, length(A), Reason]);
+        _ ->
+            lager:error(Meta, "~p ~p:~p/~p -> ~p~n~p", [Cmd, M, F, length(A), Reason, Trace])
+    end.
