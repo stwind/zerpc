@@ -56,7 +56,7 @@ explain({fun_undef, Mod0, Fun0, Arity0}) ->
 explain({catched, Reason}) ->
     {200, Reason};
 explain(Reason) ->
-    {900, {internal_server_error, Reason}}.
+    {900, {unexpected_error, Reason}}.
 
 fmt_bt(BT) ->
     [fmt_call(C) || C <- BT].

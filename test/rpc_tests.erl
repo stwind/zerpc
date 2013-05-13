@@ -44,15 +44,15 @@ pingpong([Client]) ->
 
 error_return([Client]) ->
     {error, Reason} = call_server(Client, error_return, [whatever]),
-    ?assertMatch({server, 200, _, whatever, _}, Reason).
+    ?assertMatch(whatever, Reason).
 
 throw_return([Client]) ->
     {error, Reason} = call_server(Client, throw, [{error, whatever}]),
-    ?assertMatch({server, 200, _, _, _}, Reason).
+    ?assertMatch(whatever, Reason).
 
 erlang_error([Client]) ->
-    {error, {server, _, _, _, Trace}} = call_server(Client, error, [badarg]),
-    ?assertMatch([<<"server:error/1", _/binary>> | _], Trace).
+    {error, Reason} = call_server(Client, error, [badarg]),
+    ?assertMatch({unexpected_error, badarg}, Reason).
 
 %% ===================================================================
 %% Helpers
