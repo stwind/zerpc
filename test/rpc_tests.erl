@@ -51,8 +51,7 @@ throw_return([Client]) ->
     ?assertMatch({server, 200, _, _, _}, Reason).
 
 erlang_error([Client]) ->
-    {error, Reason} = call_server(Client, error, [badarg]),
-    {server, _, _, _, Trace} = Reason,
+    {error, {server, _, _, _, Trace}} = call_server(Client, error, [badarg]),
     ?assertMatch([<<"server:error/1", _/binary>> | _], Trace).
 
 %% ===================================================================
