@@ -16,7 +16,7 @@
 setup() ->
     {ok, _} = net_kernel:start(['server@127.0.0.1', longnames]),
     zerpc_env(node(), server),
-    application:start(zerpc).
+    ok = application:start(zerpc).
 
 cleanup(_) ->
     net_kernel:stop(),
