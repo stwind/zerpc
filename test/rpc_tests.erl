@@ -44,15 +44,15 @@ pingpong([Client]) ->
 
 error_return([Client]) ->
     {error, Reason} = call_server(Client, error_return, [whatever]),
-    ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
+    ?assertMatch({server, 200, _, whatever, _}, Reason).
 
 throw_return([Client]) ->
     {error, Reason} = call_server(Client, throw, [{error, whatever}]),
-    ?assertMatch({zerpc_error, {server, 900, _, _, _}}, Reason).
+    ?assertMatch({server, 200, _, _, _}, Reason).
 
 erlang_error([Client]) ->
     {error, Reason} = call_server(Client, error, [badarg]),
-    {zerpc_error, {server, _, _, _, Trace}} = Reason,
+    {server, _, _, _, Trace} = Reason,
     ?assertMatch([<<"server:error/1", _/binary>> | _], Trace).
 
 %% ===================================================================

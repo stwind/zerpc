@@ -20,14 +20,7 @@ cast(Pool, Mod, Fun, Args) ->
 send_req(Pool, Req) ->
     case zerpc_client:request(Pool, Req) of
         {ok, Reply} ->
-            case zerpc_proto:parse(Reply) of
-                {error, Error} ->
-                    {error, {zerpc_error, Error}};
-                Res ->
-                    Res
-            end;
+            zerpc_proto:parse(Reply);
         {error, Reason} ->
-            {error, Reason};
-        {'EXIT', {timeout, _}} ->
-            {error, timeout}
+            {error, Reason}
     end.

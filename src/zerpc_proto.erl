@@ -8,8 +8,11 @@
 
 -export([parse/1]).
 
+-include_lib("eunit/include/eunit.hrl").
+
+
 -define(IS_MFA(M,F,A), is_atom(M),is_atom(F),is_list(A)).
--define(IS_ERR(R,C,T,D,S), is_atom(R),is_integer(C),is_binary(T),is_binary(D),is_list(S)).
+-define(IS_ERR(R,C,S), is_atom(R),is_integer(C),is_list(S)).
 
 %% ===================================================================
 %% Public
@@ -45,7 +48,7 @@ validate({reply, Result}) ->
     Result;
 validate({noreply}) ->
     ok;
-validate({error, {R,C,T,D,S}} = Error) when ?IS_ERR(R,C,T,D,S) ->
+validate({error, {R,C,_,_,S}} = Error) when ?IS_ERR(R,C,S) ->
     Error;
 validate(_) ->
     erlang:error(badarg).

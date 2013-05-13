@@ -23,7 +23,7 @@ handle({call, Mod, Fun, Args}) ->
         {'EXIT', {Type, BackTrace}} ->
             error_reply(Type, BackTrace);
         {error, Reason} ->
-            error_reply({internal_error, Reason});
+            error_reply({catched, Reason});
         Result ->
             zerpc_proto:reply(Result)
     end;
@@ -53,12 +53,10 @@ explain({fun_undef, Mod0, Fun0, Arity0}) ->
     Arity = zerpc_util:to_binary(Arity0),
     {101, <<"undefined function ", 
         Mod/binary, ":", Fun/binary, "/", Arity/binary>>};
-explain({internal_error, Reason}) ->
-    ReasonBin = list_to_binary(io_lib:format("~p",[Reason])),
-    {900, <<"server error: ", ReasonBin/binary>>};
+explain({catched, Reason}) ->
+    {200, Reason};
 explain(Reason) ->
-    ReasonBin = list_to_binary(io_lib:format("~p",[Reason])),
-    {901, <<"internal server error: ", ReasonBin/binary>>}.
+    {900, {internal_server_error, Reason}}.
 
 fmt_bt(BT) ->
     [fmt_call(C) || C <- BT].

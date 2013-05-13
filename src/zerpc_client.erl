@@ -30,9 +30,16 @@ request(Pool, Req) ->
 
 request(Pool, Req, Timeout) ->
     Worker = poolboy:checkout(Pool),
-    Res = (catch gen_server:call(Worker, {request, Req}, Timeout)),
-    poolboy:checkin(Pool, Worker),
-    Res.
+    try gen_server:call(Worker, {request, Req}, Timeout) of
+        Result -> Result
+    catch
+        exit:{timeout, _} ->
+            {error, {timeout, gen_server}};
+        _:Exn ->
+            {error, Exn}
+    after
+        poolboy:checkin(Pool, Worker)
+    end.
 
 %% ===================================================================
 %% gen_server
@@ -74,11 +81,11 @@ terminate(_Reason, State) ->
 do_request(Req, #state{socket = Socket}) ->
     case erlzmq:send(Socket, Req) of
         {error, eagain} ->
-            {error, timeout};
+            {error, {timeout, zmq_send}};
         ok ->
             case erlzmq:recv(Socket) of
                 {error, eagain} ->
-                    {error, timeout};
+                    {error, {timeout, zmq_recv}};
                 {ok, Rep} ->
                     {ok, Rep}
             end
