@@ -11,7 +11,7 @@
 -export([do/2]).
 
 -record(state, { 
-        hooks = [] :: list(module())
+        middlewares = [] :: list(module())
     }).
 
 %% ===================================================================
@@ -29,13 +29,13 @@ do(Pid, Req) ->
 %% ===================================================================
 
 init(Options) ->
-    {ok, #state{hooks = proplists:get_value(hooks, Options)}}.
+    {ok, #state{middlewares = proplists:get_value(middlewares, Options)}}.
 
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({request, Req}, #state{hooks = Hooks} = State) ->
-    run_hooks(Req, Hooks),
+handle_cast({request, Req}, #state{middlewares = Mods} = State) ->
+    run_middlewares(Req, Mods),
     {noreply, State};
 
 handle_cast(_Cast, State) ->
@@ -54,12 +54,12 @@ terminate(_Reason, _State) ->
 %% Private
 %% ===================================================================
 
-run_hooks(Req, [Hook | Rest]) ->
-    case Hook:execute(Req) of
+run_middlewares(Req, [Mod | Rest]) ->
+    case Mod:execute(Req) of
         {ok, Req1} ->
-            run_hooks(Req1, Rest);
+            run_middlewares(Req1, Rest);
         {error, _Reason} ->
             nop
     end;
-run_hooks(_, []) ->
+run_middlewares(_, []) ->
     ok.

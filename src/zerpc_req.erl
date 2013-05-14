@@ -5,6 +5,7 @@
 -export([reply/2]).
 -export([meta/2]).
 -export([meta/3]).
+-export([resp/1]).
 -export([set_meta/3]).
 
 -record(req, {
@@ -42,6 +43,9 @@ meta(Key, #req{meta = Meta}, Default) ->
         {ok, Val} -> Val;
         error -> Default
     end.
+
+resp(Resp) ->
+    g(resp, Resp).
 
 set_meta(Key, Val, #req{meta = Meta} = Req) ->
     Req#req{meta = dict:store(Key, Val, Meta)}.
