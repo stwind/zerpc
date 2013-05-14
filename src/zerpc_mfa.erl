@@ -18,8 +18,6 @@ execute(Req) ->
 
 handle({call, Mod, Fun, Args}) ->
     case catch erlang:apply(Mod, Fun, Args) of
-        {'EXIT', {undef, _}} ->
-            error_reply({fun_undef, Mod, Fun, Args});
         {'EXIT', {Type, BackTrace}} ->
             error_reply(Type, BackTrace);
         {error, Reason} ->
@@ -47,12 +45,8 @@ type(Type) ->
 
 explain(badrpc) ->
     {100, <<"invalid rpc command">>};
-explain({fun_undef, Mod0, Fun0, Arity0}) ->
-    Mod = zerpc_util:to_binary(Mod0),
-    Fun = zerpc_util:to_binary(Fun0),
-    Arity = zerpc_util:to_binary(Arity0),
-    {101, <<"undefined function ", 
-        Mod/binary, ":", Fun/binary, "/", Arity/binary>>};
+explain(undef) ->
+    {101, undef};
 explain({catched, Reason}) ->
     {200, Reason};
 explain(Reason) ->
