@@ -23,8 +23,7 @@ execute(Req) ->
 log(Start, End, Req, Resp) ->
     {Fmt, Args} = msg_time(Start, End),
     {Fmt1, Args1} = msg(Req, Resp),
-    Type = msg_type(Resp),
-    lager:Type(meta(Req, Resp), Fmt ++ Fmt1, Args ++ Args1).
+    do_log(msg_type(Resp), meta(Req, Resp), Fmt ++ Fmt1, Args ++ Args1).
 
 meta(Req, Resp) ->
     meta_req(Req) ++ meta_resp(Resp).
@@ -45,8 +44,6 @@ meta_resp(Resp) ->
 
 msg({Type, M, F, A}, {error, {server, _, _, Reason, _}}) ->
     {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Reason]};
-%msg({Type, M, F, A}, {error, {server, _, _, Reason, Trace}}) ->
-    %{"~p ~p:~p/~p -> ~p~n~p", [Type, M, F, length(A), Reason, Trace]};
 msg({Type, M, F, A}, {reply, Resp}) ->
     {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Resp]}.
 
@@ -55,6 +52,11 @@ msg_time(Start, End) ->
 
 diff(Start, End) ->
     timer:now_diff(End, Start) div 1000.
+
+do_log(error, Meta, Fmt, Args) ->
+    lager:error(Meta, Fmt, Args);
+do_log(notice, Meta, Fmt, Args) ->
+    lager:notice(Meta, Fmt, Args).
 
 msg_type({error, _}) ->
     error;
