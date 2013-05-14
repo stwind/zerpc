@@ -23,7 +23,8 @@ execute(Req) ->
 log(Start, End, Req, Resp) ->
     {Fmt, Args} = msg_time(Start, End),
     {Fmt1, Args1} = msg(Req, Resp),
-    lager:error(meta(Req, Resp), Fmt ++ Fmt1, Args ++ Args1).
+    Type = msg_type(Resp),
+    lager:Type(meta(Req, Resp), Fmt ++ Fmt1, Args ++ Args1).
 
 meta(Req, Resp) ->
     meta_req(Req) ++ meta_resp(Resp).
@@ -50,8 +51,12 @@ msg({Type, M, F, A}, {reply, Resp}) ->
     {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Resp]}.
 
 msg_time(Start, End) ->
-    {{Y,M,D},{H,MM,S}} = calendar:now_to_local_time(Start),
-    {"~b-~b-~b ~b:~b:~b [~bms] ",[Y,M,D,H,MM,S,diff(Start, End)]}.
+    {"[~bms] ",[diff(Start, End)]}.
 
 diff(Start, End) ->
     timer:now_diff(End, Start) div 1000.
+
+msg_type({error, _}) ->
+    error;
+msg_type(_) ->
+    notice.
