@@ -8,8 +8,7 @@
 
 execute(Req) ->
     {Body, Req1} = zerpc_req:body(Req),
-    Result = handle(Body),
-    Req2 = zerpc_req:reply(Result, Req1),
+    Req2 = zerpc_req:reply(handle(Body), Req1),
     {ok, Req2}.
 
 %% ===================================================================
@@ -44,7 +43,7 @@ type(Type) ->
     Type.
 
 explain(badrpc) ->
-    {100, <<"invalid rpc command">>};
+    {100, badrpc};
 explain(undef) ->
     {101, undef};
 explain({catched, Reason}) ->

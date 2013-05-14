@@ -31,8 +31,8 @@ body(Req) ->
 
 reply(Reply, #req{peer = Peer} = Req) ->
     Req1 = set_meta(end_time, os:timestamp(), Req),
-    zerpc_server:reply(Peer, Reply),
-    Req1.
+    zerpc_server:reply(Peer, zerpc_proto:encode(Reply)),
+    Req1#req{resp = Reply}.
 
 meta(Key, Req) ->
     meta(Key, Req, undefined).
@@ -51,7 +51,7 @@ set_meta(Key, Val, #req{meta = Meta} = Req) ->
 %% ===================================================================
 
 parse_msg(Msg) ->
-    case catch zerpc_proto:parse(Msg) of
+    case catch zerpc_proto:decode(Msg) of
         {'EXIT', {badarg, _}} ->
             {error, badarg};
         Body ->

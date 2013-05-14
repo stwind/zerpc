@@ -6,7 +6,8 @@
 -export([noreply/0]).
 -export([error/1]).
 
--export([parse/1]).
+-export([decode/1]).
+-export([encode/1]).
 
 -include_lib("eunit/include/eunit.hrl").
 
@@ -19,22 +20,25 @@
 %% ===================================================================
 
 call(Mod, Fun, Args) ->
-    encode({call, Mod, Fun, Args}).
+    {call, Mod, Fun, Args}.
 
 cast(Mod, Fun, Args) ->
-    encode({cast, Mod, Fun, Args}).
+    {cast, Mod, Fun, Args}.
 
 reply(Result) ->
-    encode({reply, Result}).
+    {reply, Result}.
 
 noreply() ->
-    encode({noreply}).
+    {noreply}.
 
 error(Error) ->
-    encode({error, Error}).
+    {error, Error}.
 
-parse(Binary) ->
-    validate(decode(Binary)).
+encode(Term) ->
+    bert:encode(Term).
+
+decode(Binary) ->
+    validate(bert:decode(Binary)).
 
 %% ===================================================================
 %% Private
@@ -53,12 +57,6 @@ validate({error, {R,C,_,_,S}} = Error) when ?IS_ERR(R,C,S) ->
 validate(_) ->
     erlang:error(badarg).
 
-encode(Term) ->
-    bert:encode(Term).
-
-decode(Binary) ->
-    bert:decode(Binary).
-
 %% ===================================================================
 %% Eunit
 %% ===================================================================
@@ -66,14 +64,17 @@ decode(Binary) ->
 -ifdef(TEST).
 -include_lib("eunit/include/eunit.hrl").
 
+dc(V) ->
+    decode(encode(V)).
+
 proto_test_() ->
     [
-        {"call", ?_assertMatch({call, m, f, []}, parse(call(m, f, [])))},
-        {"cast", ?_assertMatch({cast, m, f, []}, parse(cast(m, f, [])))},
-        {"reply", ?_assertMatch(result, parse(reply(result)))},
-        {"noreply", ?_assertMatch(ok, parse(noreply()))},
+        {"call", ?_assertMatch({call, m, f, []}, dc(call(m, f, [])))},
+        {"cast", ?_assertMatch({cast, m, f, []}, dc(cast(m, f, [])))},
+        {"reply", ?_assertMatch(result, dc(reply(result)))},
+        {"noreply", ?_assertMatch(ok, dc(noreply()))},
         {"error", ?_assertMatch({error,{server, 100, <<"type">>, <<"class">>, []}}, 
-                parse(?MODULE:error({server, 100, <<"type">>, <<"class">>, []})))}
+                dc(?MODULE:error({server, 100, <<"type">>, <<"class">>, []})))}
     ].
 
 -endif.

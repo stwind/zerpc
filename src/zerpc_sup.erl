@@ -80,7 +80,7 @@ worker_pool() ->
         {size, PoolSize},
         {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
     ],
-    Hooks = zerpc_util:get_env(hooks, [zerpc_mfa]),
-    WorkerArgs = [{hooks, Hooks}],
+    Hooks = zerpc_util:get_env(middlewares, [zerpc_mfa]),
+    WorkerArgs = [{middlewares, Hooks}],
     {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
         permanent, 5000, worker, [poolboy]}.

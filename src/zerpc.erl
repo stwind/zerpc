@@ -20,11 +20,11 @@ cast(Pool, Mod, Fun, Args) ->
 %% ===================================================================
 
 send_req(Pool, Req) ->
-    case zerpc_client:request(Pool, Req) of
+    case zerpc_client:request(Pool, zerpc_proto:encode(Req)) of
         {ok, Reply} ->
-            case zerpc_proto:parse(Reply) of
+            case zerpc_proto:decode(Reply) of
                 {error, {server, _, _, Reason, _} = Error} ->
-                    log_error(zerpc_proto:parse(Req), Error),
+                    log_error(Req, Error),
                     {error, Reason};
                 Other ->
                     Other
