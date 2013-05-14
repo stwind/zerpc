@@ -10,7 +10,7 @@
 
 execute(Req) ->
     {Body, _} = zerpc_req:body(Req),
-    {Resp, _} = zerpc_req:body(Req),
+    Resp = zerpc_req:resp(Req),
     Start = zerpc_req:meta(start_time, Req),
     End = zerpc_req:meta(end_time, Req),
     log(Start, End, Body, Resp),
@@ -38,14 +38,16 @@ meta_resp({server, Code, Type, Reason, Trace}) ->
     [
         {error_code, Code}, {error_type, Type}, 
         {reason, Reason}, {trace, Trace}
-    ].
+    ];
+meta_resp(Resp) ->
+    [{resp, Resp}].
 
-msg({Type, M, F, A}, {server, _, _, Reason, []}) ->
-    {"~pms: ~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Reason]};
-msg({Type, M, F, A}, {server, _, _, Reason, Trace}) ->
-    {"~p ~p:~p/~p -> ~p~n~p", [Type, M, F, length(A), Reason, Trace]};
-msg({Type, M, F, A}, Resp) ->
-    {"~p ~p:~p/~p -> ~w", [Type, M, F, length(A), Resp]}.
+msg({Type, M, F, A}, {error, {server, _, _, Reason, _}}) ->
+    {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Reason]};
+%msg({Type, M, F, A}, {error, {server, _, _, Reason, Trace}}) ->
+    %{"~p ~p:~p/~p -> ~p~n~p", [Type, M, F, length(A), Reason, Trace]};
+msg({Type, M, F, A}, {reply, Resp}) ->
+    {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Resp]}.
 
 msg_time(Start, End) ->
     {{Y,M,D},{H,MM,S}} = calendar:now_to_local_time(Start),

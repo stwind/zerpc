@@ -63,4 +63,5 @@ parse_msg(Msg) ->
     end.
 
 g(peer, #req{peer = Peer}) -> Peer;
-g(body, #req{body = Body}) -> Body.
+g(body, #req{body = Body}) -> Body;
+g(resp, #req{resp = Resp}) -> Resp.
