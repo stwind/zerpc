@@ -39,7 +39,7 @@ meta_resp({error, {server, Code, Type, Reason, Trace}}) ->
         {error_code, Code}, {error_type, Type}, 
         {reason, Reason} | maybe_trace(Trace)
     ];
-meta_resp(Resp) ->
+meta_resp({reply, Resp}) ->
     %% XXX: performance issue
     [{resp, oneline(io_lib:format("~p", [Resp]))}].
 
