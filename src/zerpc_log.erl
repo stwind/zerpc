@@ -34,10 +34,10 @@ meta_req({Type, Mod, Fun, Args}) ->
         {cmd_arity, length(Args)}
     ].
 
-meta_resp({server, Code, Type, Reason, Trace}) ->
+meta_resp({error, {server, Code, Type, Reason, Trace}}) ->
     [
         {error_code, Code}, {error_type, Type}, 
-        {reason, Reason}, {trace, Trace}
+        {reason, Reason} | maybe_trace(Trace)
     ];
 meta_resp(Resp) ->
     %% XXX: performance issue
@@ -65,7 +65,10 @@ msg_type(_) ->
     notice.
 
 oneline(Str) ->
-    replace(Str, "\n\s*", "").
+    replace(Str, "\n\s*", " ").
 
 replace(Str, Old, New) ->
     re:replace(Str, Old, New, [global,{return,list}]).
+
+maybe_trace([]) -> [];
+maybe_trace(Trace) -> [{trace, Trace}].
