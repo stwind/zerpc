@@ -31,7 +31,7 @@ meta(Req, Resp) ->
 meta_req({Type, Mod, Fun, Args}) ->
     [
         {type, zerpc}, {cmd_type, Type}, {cmd_mod, Mod}, {cmd_fun, Fun},
-        {cmd_args, Args}
+        {cmd_arity, length(Args)}
     ].
 
 meta_resp({server, Code, Type, Reason, Trace}) ->
@@ -40,7 +40,8 @@ meta_resp({server, Code, Type, Reason, Trace}) ->
         {reason, Reason}, {trace, Trace}
     ];
 meta_resp(Resp) ->
-    [{resp, Resp}].
+    %% XXX: performance issue
+    [{resp, oneline(io_lib:format("~p", [Resp]))}].
 
 msg({Type, M, F, A}, {error, {server, _, _, Reason, _}}) ->
     {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Reason]};
@@ -56,9 +57,15 @@ diff(Start, End) ->
 do_log(error, Meta, Fmt, Args) ->
     lager:error(Meta, Fmt, Args);
 do_log(notice, Meta, Fmt, Args) ->
-    lager:notice(Meta, Fmt, Args).
+    lager:info(Meta, Fmt, Args).
 
 msg_type({error, _}) ->
     error;
 msg_type(_) ->
     notice.
+
+oneline(Str) ->
+    replace(Str, "\n\s*", "").
+
+replace(Str, Old, New) ->
+    re:replace(Str, Old, New, [global,{return,list}]).
