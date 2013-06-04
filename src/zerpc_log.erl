@@ -43,8 +43,8 @@ meta_resp({reply, Resp}) ->
     %% XXX: performance issue
     [{resp, oneline(io_lib:format("~p", [Resp]))}].
 
-msg({Type, M, F, A}, {error, {server, _, _, Reason, _}}) ->
-    {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Reason]};
+msg({Type, M, F, A}, {error, {server, _, _, Reason, Trace}}) ->
+    {"~p ~p:~p/~p -> ~p~n~p", [Type, M, F, length(A), Reason, Trace]};
 msg({Type, M, F, A}, {reply, Resp}) ->
     {"~p ~p:~p/~p -> ~p", [Type, M, F, length(A), Resp]}.
 
