@@ -88,5 +88,7 @@ do_request(Req, #state{socket = Socket}) ->
                     {error, {timeout, zmq_recv}};
                 {ok, Rep} ->
                     {ok, Rep}
-            end
+            end;
+        {error, Reason} ->
+            {error, Reason}
     end.
