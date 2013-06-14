@@ -32,12 +32,10 @@ handle({cast, Mod, Fun, Args}) ->
 
 error_reply(Error, BackTrace) when is_list(BackTrace) ->
     {Code, Type, Reason} = explain(Error),
-    Error = {server, Code, Type, Reason, BackTrace},
-    zerpc_proto:error(Error);
+    zerpc_proto:error({server, Code, Type, Reason, BackTrace});
 error_reply(Type, Reason) ->
     {Code, _, Reason1} = explain(Reason),
-    Error = {server, Code, type(Type), Reason1, []},
-    zerpc_proto:error(Error).
+    zerpc_proto:error({server, Code, type(Type), Reason1, []}).
 
 type(Type) when is_tuple(Type) ->
     element(1, Type);
