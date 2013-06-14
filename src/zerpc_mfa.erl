@@ -53,4 +53,4 @@ explain({throw, Type}) ->
     {200, Type, undefined};
 
 explain(Reason) ->
-    {900, unknown, Reason}.
+    {900, Reason, undefined}.
