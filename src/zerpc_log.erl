@@ -77,7 +77,7 @@ fmt_bt(BT) ->
     [fmt_call(C) || C <- BT].
 
 fmt_call({M, F, A, Meta}) ->
-    <<(fmt_mfa(M,F,A))/binary,(fmt_meta(Meta))/binary>>.
+    <<(fmt_mfa(M,F,A))/binary,(fmt_meta(Meta))/binary, "\n">>.
 
 fmt_mfa(M0, F0, A0) ->
     M = zerpc_util:to_binary(M0),
