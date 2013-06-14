@@ -52,7 +52,7 @@ throw_return([Client]) ->
 
 erlang_error([Client]) ->
     {error, Reason} = call_server(Client, error, [badarg]),
-    ?assertMatch({unexpected_error, badarg}, Reason).
+    ?assertMatch(badarg, Reason).
 
 %% ===================================================================
 %% Helpers

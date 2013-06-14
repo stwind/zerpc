@@ -2,6 +2,8 @@
 
 -export([execute/1]).
 
+-include_lib("eunit/include/eunit.hrl").
+
 %% ===================================================================
 %% Public
 %% ===================================================================
@@ -34,7 +36,7 @@ error_reply(Type) ->
 error_reply(Type0, BackTrace) when is_list(BackTrace) ->
     {Code, Reason} = explain(Type0),
     Type = zerpc_util:to_binary(type(Type0)),
-    Error = {server, Code, Type, Reason, fmt_bt(BackTrace)},
+    Error = {server, Code, Type, Reason, BackTrace},
     zerpc_proto:error(Error);
 error_reply(Type0, Reason) ->
     {Code, Reason1} = explain(Reason),
@@ -51,31 +53,11 @@ explain(badrpc) ->
     {100, badrpc};
 explain(undef) ->
     {101, undef};
+explain({badmatch, Value}) ->
+    {102, Value};
+
 explain({catched, Reason}) ->
     {200, Reason};
+
 explain(Reason) ->
-    {900, {unexpected_error, Reason}}.
-
-fmt_bt(BT) ->
-    [fmt_call(C) || C <- BT].
-
-fmt_call({M, F, A, Meta}) ->
-    <<(fmt_mfa(M,F,A))/binary,(fmt_meta(Meta))/binary>>.
-
-fmt_mfa(M0, F0, A0) ->
-    M = zerpc_util:to_binary(M0),
-    F = zerpc_util:to_binary(F0),
-    A = if 
-        is_integer(A0) ->
-            zerpc_util:to_binary(A0);
-        is_list(A0) ->
-            zerpc_util:to_binary(length(A0))
-    end,
-    <<M/binary,":",F/binary,"/",A/binary>>.
-
-fmt_meta([]) ->
-    <<>>;
-fmt_meta([{file,File0},{line,Line0}]) ->
-    File = zerpc_util:to_binary(File0),
-    Line = zerpc_util:to_binary(Line0),
-    <<" (",File/binary,":",Line/binary,")">>.
+    {900, Reason}.
