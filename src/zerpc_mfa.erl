@@ -19,10 +19,10 @@ execute(Req) ->
 
 handle({call, Mod, Fun, Args}) ->
     case catch erlang:apply(Mod, Fun, Args) of
-        {'EXIT', {Type, BackTrace}} ->
-            error_reply(Type, BackTrace);
-        {error, Reason} ->
-            error_reply({catched, Reason});
+        {'EXIT', {Error, BackTrace}} ->
+            error_reply(Error, BackTrace);
+        {error, Error} ->
+            error_reply({throw, Error}, []);
         Result ->
             zerpc_proto:reply(Result)
     end;
@@ -30,15 +30,12 @@ handle({cast, Mod, Fun, Args}) ->
     proc_lib:spawn(Mod, Fun, Args),
     zerpc_proto:noreply().
 
-error_reply(Type) ->
-    error_reply(Type, []).
-
-error_reply(Type, BackTrace) when is_list(BackTrace) ->
-    {Code, Reason} = explain(Type),
-    Error = {server, Code, type(Type), Reason, BackTrace},
+error_reply(Error, BackTrace) when is_list(BackTrace) ->
+    {Code, Type, Reason} = explain(Error),
+    Error = {server, Code, Type, Reason, BackTrace},
     zerpc_proto:error(Error);
 error_reply(Type, Reason) ->
-    {Code, Reason1} = explain(Reason),
+    {Code, _, Reason1} = explain(Reason),
     Error = {server, Code, type(Type), Reason1, []},
     zerpc_proto:error(Error).
 
@@ -48,12 +45,14 @@ type(Type) ->
     Type.
 
 explain(undef) ->
-    {101, undef};
+    {101, undef, <<>>};
 explain({badmatch, Value}) ->
-    {102, Value};
+    {102, badmatch, Value};
 
-explain({catched, Reason}) ->
-    {200, Reason};
+explain({throw, {Type, Reason}}) ->
+    {200, Type, Reason};
+explain({throw, Type}) ->
+    {200, Type, <<>>};
 
 explain(Reason) ->
-    {900, Reason}.
+    {900, unknown, Reason}.
