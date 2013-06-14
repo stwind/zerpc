@@ -49,8 +49,6 @@ type(Type) when is_tuple(Type) ->
 type(Type) ->
     Type.
 
-explain(badrpc) ->
-    {100, badrpc};
 explain(undef) ->
     {101, undef};
 explain({badmatch, Value}) ->
