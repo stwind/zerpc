@@ -43,14 +43,14 @@ type(Type) ->
     Type.
 
 explain(undef) ->
-    {101, undef, <<>>};
+    {101, undef, undefined};
 explain({badmatch, Value}) ->
     {102, badmatch, Value};
 
 explain({throw, {Type, Reason}}) ->
     {200, Type, Reason};
 explain({throw, Type}) ->
-    {200, Type, <<>>};
+    {200, Type, undefined};
 
 explain(Reason) ->
     {900, unknown, Reason}.
