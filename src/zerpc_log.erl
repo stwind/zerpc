@@ -71,4 +71,28 @@ replace(Str, Old, New) ->
     re:replace(Str, Old, New, [global,{return,list}]).
 
 maybe_trace([]) -> [];
-maybe_trace(Trace) -> [{trace, Trace}].
+maybe_trace(Trace) -> [{trace, fmt_bt(Trace)}].
+
+fmt_bt(BT) ->
+    [fmt_call(C) || C <- BT].
+
+fmt_call({M, F, A, Meta}) ->
+    <<(fmt_mfa(M,F,A))/binary,(fmt_meta(Meta))/binary>>.
+
+fmt_mfa(M0, F0, A0) ->
+    M = zerpc_util:to_binary(M0),
+    F = zerpc_util:to_binary(F0),
+    A = if 
+        is_integer(A0) ->
+            zerpc_util:to_binary(A0);
+        is_list(A0) ->
+            zerpc_util:to_binary(length(A0))
+    end,
+    <<M/binary,":",F/binary,"/",A/binary>>.
+
+fmt_meta([]) ->
+    <<>>;
+fmt_meta([{file,File0},{line,Line0}]) ->
+    File = zerpc_util:to_binary(File0),
+    Line = zerpc_util:to_binary(Line0),
+    <<" (",File/binary,":",Line/binary,")">>.
