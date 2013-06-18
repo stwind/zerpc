@@ -50,7 +50,7 @@ explain({badmatch, Value}) ->
 explain({throw, {Type, Reason}}) ->
     {200, Type, Reason};
 explain({throw, Type}) ->
-    {200, Type, undefined};
+    {200, Type, Type};
 
 explain(Reason) ->
     {900, Reason, Reason}.
