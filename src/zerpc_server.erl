@@ -43,22 +43,12 @@ handle_cast(_Cast, State) ->
 
 handle_info({zmq, Router, Msg, Flags}, 
     #state{router = Router, dealer = Dealer} = State) ->
-    case proplists:get_bool(rcvmore, Flags) of
-        true ->
-            erlzmq:send(Dealer, Msg, [sndmore]);
-        false ->
-            erlzmq:send(Dealer, Msg)
-    end,
+    send_to(Dealer, Msg, Flags),
     {noreply, State};
 
 handle_info({zmq, Dealer, Msg, Flags}, 
     #state{router = Router, dealer = Dealer} = State) ->
-    ok = case proplists:get_bool(rcvmore, Flags) of
-        true ->
-            erlzmq:send(Router, Msg, [sndmore]);
-        false ->
-            erlzmq:send(Router, Msg)
-    end,
+    send_to(Router, Msg, Flags),
     {noreply, State};
 
 handle_info(_Info, State) ->
@@ -74,3 +64,11 @@ terminate(_Reason, State) ->
 %% ===================================================================
 %% Private
 %% ===================================================================
+
+send_to(Socket, Msg, Flags) ->
+    case proplists:get_bool(rcvmore, Flags) of
+        true ->
+            erlzmq:send(Socket, Msg, [sndmore]);
+        false ->
+            erlzmq:send(Socket, Msg)
+    end.
