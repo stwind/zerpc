@@ -7,29 +7,32 @@
 
 -include_lib("eunit/include/eunit.hrl").
 
--export([start_link/1]).
--export([do/2]).
+-export([start_link/3]).
 
 -record(state, { 
-        middlewares = [] :: list(module())
+        middlewares = [] :: list(module()),
+        context :: term(),
+        socket :: term()
     }).
 
 %% ===================================================================
 %% Public
 %% ===================================================================
 
-start_link(Options) ->
-    gen_server:start_link(?MODULE, Options, []).
-
-do(Pid, Req) ->
-    gen_server:cast(Pid, {request, Req}).
+start_link(DealerEndpoint, Context, Middlewares) ->
+    gen_server:start_link(?MODULE, [DealerEndpoint, Context, Middlewares], []).
 
 %% ===================================================================
 %% gen_server
 %% ===================================================================
 
-init(Options) ->
-    {ok, #state{middlewares = proplists:get_value(middlewares, Options)}}.
+init([DealerEndpoint, Context, Middlewares]) ->
+    {ok, Socket} = erlzmq:socket(Context, [rep, {active, true}]),
+    ok = erlzmq:connect(Socket, DealerEndpoint),
+    {ok, #state{
+            socket = Socket,
+            middlewares = Middlewares
+        }}.
 
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
@@ -41,7 +44,9 @@ handle_cast({request, Req}, #state{middlewares = Mods} = State) ->
 handle_cast(_Cast, State) ->
     {noreply, State}.
 
-handle_info(_Info, State) ->
+handle_info({zmq, Socket, Msg, _}, #state{socket = Socket} = State) ->
+    {ok, Req} = handle_req(zerpc_req:new(Msg), State),
+    reply(Req, State),
     {noreply, State}.
 
 code_change(_FromVsn, _ToVsn, State) ->
@@ -54,6 +59,9 @@ terminate(_Reason, _State) ->
 %% Private
 %% ===================================================================
 
+handle_req(Req, #state{middlewares = Mods}) ->
+    run_middlewares(Req, Mods).
+
 run_middlewares(Req, [Mod | Rest]) ->
     case Mod:execute(Req) of
         {ok, Req1} ->
@@ -61,5 +69,9 @@ run_middlewares(Req, [Mod | Rest]) ->
         {error, _Reason} ->
             nop
     end;
-run_middlewares(_, []) ->
-    ok.
+run_middlewares(Req, []) ->
+    {ok, Req}.
+
+reply(Req, #state{socket = Socket}) ->
+    Reply = zerpc_req:resp(Req),
+    ok = erlzmq:send(Socket, zerpc_proto:encode(Reply)).

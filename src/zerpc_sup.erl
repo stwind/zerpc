@@ -36,7 +36,7 @@ init([Context]) ->
 children(Context) ->
     case zerpc_util:get_env(mode, client) of
         server ->
-            [server(Context), router(), worker_pool()];
+            [server(Context), worker_sup(Context)];
         client ->
             lists:flatten([clients(Context)])
     end.
@@ -65,22 +65,14 @@ client(Context, {Name, Options}) ->
 
 server(Context) ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
-    {zerpc_server, {zerpc_server, start_link, [Endpoint, Context]}, permanent,
-        5000, worker, [zerpc_server]}.
+    DealerEndpoint = zerpc_util:get_env(dealer, ?DEALER_ENDPOINT),
+    {zerpc_server, {zerpc_server, start_link, [Endpoint,DealerEndpoint,Context]}, 
+        permanent, 5000, worker, [zerpc_server]}.
 
-router() ->
-    {zerpc_router, {zerpc_router, start_link, []}, permanent,
-        5000, worker, [zerpc_router]}.
-
-worker_pool() ->
-    PoolSize = zerpc_util:get_env(size, 100),
-    PoolArgs = [
-        {name, {local, ?SERVER_POOL}},
-        {worker_module, zerpc_worker},
-        {size, PoolSize},
-        {max_overflow, zerpc_util:get_env(overflow, PoolSize * 2)}
-    ],
-    Hooks = zerpc_util:get_env(middlewares, [zerpc_mfa,zerpc_log]),
-    WorkerArgs = [{middlewares, Hooks}],
-    {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
-        permanent, 5000, worker, [poolboy]}.
+worker_sup(Context) ->
+    Size = zerpc_util:get_env(size, 100),
+    DealerEndpoint = zerpc_util:get_env(dealer, ?DEALER_ENDPOINT),
+    MiddleWares = zerpc_util:get_env(middlewares, [zerpc_mfa,zerpc_log]),
+    {zerpc_worker_sup, {zerpc_worker_sup, start_link,
+            [Size, DealerEndpoint, MiddleWares, Context]},
+        permanent, infinity, supervisor, [zerpc_worker_sup]}.

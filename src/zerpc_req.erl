@@ -1,6 +1,6 @@
 -module(zerpc_req).
 
--export([new/2]).
+-export([new/1]).
 -export([body/1]).
 -export([reply/2]).
 -export([meta/2]).
@@ -9,7 +9,6 @@
 -export([set_meta/3]).
 
 -record(req, {
-        peer :: binary(),
         msg :: binary(),
         body :: term(),
         resp :: binary(),
@@ -20,9 +19,8 @@
 %% Public
 %% ===================================================================
 
-new(Peer, Msg) ->
-    Req = #req{peer = Peer, msg = Msg},
-    set_meta(start_time, os:timestamp(), Req).
+new(Msg) ->
+    set_meta(start_time, os:timestamp(), #req{msg = Msg}).
 
 body(#req{body = undefined, msg = Msg} = Req) ->
     Body = parse_msg(Msg),
@@ -30,9 +28,9 @@ body(#req{body = undefined, msg = Msg} = Req) ->
 body(Req) ->
     {g(body, Req), Req}.
 
-reply(Reply, #req{peer = Peer} = Req) ->
+reply(Reply, Req) ->
     Req1 = set_meta(end_time, os:timestamp(), Req),
-    zerpc_server:reply(Peer, zerpc_proto:encode(Reply)),
+    %zerpc_server:reply(Peer, zerpc_proto:encode(Reply)),
     Req1#req{resp = Reply}.
 
 meta(Key, Req) ->
@@ -51,7 +49,7 @@ set_meta(Key, Val, #req{meta = Meta} = Req) ->
     Req#req{meta = dict:store(Key, Val, Meta)}.
 
 %% ===================================================================
-%% Public
+%% Private
 %% ===================================================================
 
 parse_msg(Msg) ->
@@ -62,6 +60,5 @@ parse_msg(Msg) ->
             Body
     end.
 
-g(peer, #req{peer = Peer}) -> Peer;
 g(body, #req{body = Body}) -> Body;
 g(resp, #req{resp = Resp}) -> Resp.
