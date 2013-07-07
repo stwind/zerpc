@@ -15,8 +15,11 @@
 
 -record(state, {
         context :: term(),
-        socket  :: term()
-}).
+        endpoint :: string(),
+        socket  :: term(),
+        sndtimeo = 5000 :: integer(),
+        rcvtimeo = 5000 :: integer()
+    }).
 
 %% ===================================================================
 %% Public
@@ -50,14 +53,14 @@ init(Options) ->
     Endpoint = proplists:get_value(endpoint, Options),
     SendTimeout = proplists:get_value(send_timeout, Options),
     RecvTimeout = proplists:get_value(recv_timeout, Options),
-    {ok, Socket}  = erlzmq:socket(Context, req),
-    ok = erlzmq:setsockopt(Socket, sndtimeo, SendTimeout),
-    ok = erlzmq:setsockopt(Socket, rcvtimeo, RecvTimeout),
-    ok = erlzmq:connect(Socket, Endpoint),
-    {ok, #state{socket = Socket, context = Context}}.
+    {ok, open_socket(#state{
+                context = Context, endpoint = Endpoint,
+                sndtimeo = SendTimeout, rcvtimeo = RecvTimeout
+            })}.
 
 handle_call({request, Req}, _From, State) ->
-    {reply, do_request(Req, State), State};
+    {Result, State1} = do_request(Req, State),
+    {reply, Result, State1};
 
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
@@ -78,17 +81,28 @@ terminate(_Reason, State) ->
 %% Private
 %% ===================================================================
 
-do_request(Req, #state{socket = Socket}) ->
+do_request(Req, #state{socket = Socket} = State) ->
     case erlzmq:send(Socket, Req) of
         {error, eagain} ->
-            {error, {timeout, zmq_send}};
+            {{error, send_timeout}, State};
         ok ->
             case erlzmq:recv(Socket) of
                 {error, eagain} ->
-                    {error, {timeout, zmq_recv}};
+                    ok = erlzmq:close(Socket),
+                    {{error, recv_timeout}, open_socket(State)};
                 {ok, Rep} ->
-                    {ok, Rep}
+                    {{ok, Rep}, State}
             end;
         {error, Reason} ->
-            {error, Reason}
+            {{error, Reason}, State}
     end.
+
+open_socket(#state{
+        context = Context, endpoint = Endpoint,
+        sndtimeo = Sndtimeo, rcvtimeo = Rcvtimeo
+    } = State) ->
+    {ok, Socket} = erlzmq:socket(Context, req),
+    ok = erlzmq:setsockopt(Socket, sndtimeo, Sndtimeo),
+    ok = erlzmq:setsockopt(Socket, rcvtimeo, Rcvtimeo),
+    ok = erlzmq:connect(Socket, Endpoint),
+    State#state{socket = Socket}.
