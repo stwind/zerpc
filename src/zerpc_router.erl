@@ -1,41 +1,40 @@
--module(zerpc_worker).
+-module(zerpc_router).
 
 -behaviour(gen_server).
 
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
         code_change/3]).
 
+-include("internal.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
--export([start_link/1]).
--export([do/2]).
+-export([start_link/0]).
+-export([process/1]).
 
--record(state, { 
-        middlewares = [] :: list(module())
-    }).
+-record(state, {}).
 
 %% ===================================================================
 %% Public
 %% ===================================================================
 
-start_link(Options) ->
-    gen_server:start_link(?MODULE, Options, []).
+start_link() ->
+    gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
-do(Pid, Req) ->
-    gen_server:cast(Pid, {request, Req}).
+process(Req) ->
+    gen_server:cast(?MODULE, {process, Req}).
 
 %% ===================================================================
 %% gen_server
 %% ===================================================================
 
-init(Options) ->
-    {ok, #state{middlewares = proplists:get_value(middlewares, Options)}}.
+init([]) ->
+    {ok, #state{}}.
 
 handle_call(_Call, _From, State) ->
     {reply, ok, State}.
 
-handle_cast({request, Req}, #state{middlewares = Mods} = State) ->
-    run_middlewares(Req, Mods),
+handle_cast({process, Req}, State) ->
+    handle_msg(Req),
     {noreply, State};
 
 handle_cast(_Cast, State) ->
@@ -54,12 +53,7 @@ terminate(_Reason, _State) ->
 %% Private
 %% ===================================================================
 
-run_middlewares(Req, [Mod | Rest]) ->
-    case Mod:execute(Req) of
-        {ok, Req1} ->
-            run_middlewares(Req1, Rest);
-        {error, _Reason} ->
-            nop
-    end;
-run_middlewares(_, []) ->
-    ok.
+handle_msg(Req) ->
+    Worker = poolboy:checkout(?SERVER_POOL),
+    ok = zerpc_worker:do(Worker, Req),
+    poolboy:checkin(?SERVER_POOL, Worker).

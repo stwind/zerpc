@@ -36,7 +36,7 @@ init([Context]) ->
 children(Context) ->
     case zerpc_util:get_env(mode, client) of
         server ->
-            [server(Context), worker_sup(Context)];
+            [server(Context), router(), worker_pool()];
         client ->
             lists:flatten([clients(Context)])
     end.
@@ -51,7 +51,7 @@ client(Context, {Name, Options}) ->
         {name, {local, Name}},
         {worker_module, zerpc_client},
         {size, Size},
-        {max_overflow, proplists:get_value(overflow, Options, Size * 2)}
+        {max_overflow, proplists:get_value(overflow, Options, Size * 3)}
     ],
     WorkerArgs = [
         {context, Context},
@@ -65,14 +65,22 @@ client(Context, {Name, Options}) ->
 
 server(Context) ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
-    DealerEndpoint = zerpc_util:get_env(dealer, ?DEALER_ENDPOINT),
-    {zerpc_server, {zerpc_server, start_link, [Endpoint,DealerEndpoint,Context]}, 
-        permanent, 5000, worker, [zerpc_server]}.
+    {zerpc_server, {zerpc_server, start_link, [Endpoint, Context]}, permanent,
+        5000, worker, [zerpc_server]}.
 
-worker_sup(Context) ->
-    Size = zerpc_util:get_env(size, 100),
-    DealerEndpoint = zerpc_util:get_env(dealer, ?DEALER_ENDPOINT),
-    MiddleWares = zerpc_util:get_env(middlewares, [zerpc_mfa,zerpc_log]),
-    {zerpc_worker_sup, {zerpc_worker_sup, start_link,
-            [Size, DealerEndpoint, MiddleWares, Context]},
-        permanent, infinity, supervisor, [zerpc_worker_sup]}.
+router() ->
+    {zerpc_router, {zerpc_router, start_link, []}, permanent,
+        5000, worker, [zerpc_router]}.
+
+worker_pool() ->
+    PoolSize = zerpc_util:get_env(size, 100),
+    PoolArgs = [
+        {name, {local, ?SERVER_POOL}},
+        {worker_module, zerpc_worker},
+        {size, PoolSize},
+        {max_overflow, zerpc_util:get_env(overflow, PoolSize * 3)}
+    ],
+    Hooks = zerpc_util:get_env(middlewares, [zerpc_mfa,zerpc_log]),
+    WorkerArgs = [{middlewares, Hooks}],
+    {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
+        permanent, 5000, worker, [poolboy]}.
