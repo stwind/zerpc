@@ -44,13 +44,25 @@ type(Type) ->
 
 explain(undef) ->
     {101, undef, undefined};
+explain(function_clause) ->
+    {102, function_clause, undefined};
+explain(if_clause) ->
+    {103, if_clause, undefined};
+explain(badarg) ->
+    {104, badarg, undefined};
+explain(badarith) ->
+    {105, badarith, undefined};
 explain({badmatch, Value}) ->
-    {102, badmatch, Value};
+    {106, badmatch, Value};
+explain({case_clause, Value}) ->
+    {107, case_clause, Value};
+explain({badarity, Value}) ->
+    {108, badarity, Value};
 
 explain({throw, {Type, Reason}}) ->
     {200, Type, Reason};
 explain({throw, Type}) ->
-    {200, Type, Type};
+    {200, Type, undefined};
 
 explain(Reason) ->
     {900, Reason, Reason}.
