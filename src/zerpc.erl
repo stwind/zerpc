@@ -21,11 +21,16 @@ send_req(Pool, Req) ->
     case zerpc_client:request(Pool, zerpc_proto:encode(Req)) of
         {ok, Reply} ->
             case zerpc_proto:decode(Reply) of
-                {error, {server, _, _, Reason, _}} ->
-                    {error, Reason};
+                {error, Reason} ->
+                    {error, reason(Reason)};
                 Other ->
                     Other
             end;
         {error, Reason} ->
             {error, Reason}
     end.
+
+reason({server, _, Type, undefined, _}) ->
+    Type;
+reason({server, _, Type, Value, _}) ->
+    {Type, Value}.

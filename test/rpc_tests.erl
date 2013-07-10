@@ -43,16 +43,19 @@ pingpong([Client]) ->
     ?assertMatch(ping, call_server(Client, pong, [])).
 
 error_return([Client]) ->
-    {error, Reason} = call_server(Client, error_return, [whatever]),
-    ?assertMatch(whatever, Reason).
+    ?assertMatch({error, whatever}, 
+        call_server(Client, error_return, [whatever])),
+    ?assertMatch({error, {type, value}}, 
+        call_server(Client, error_return, [{type, value}])).
 
 throw_return([Client]) ->
-    {error, Reason} = call_server(Client, throw, [{error, whatever}]),
-    ?assertMatch(whatever, Reason).
+    ?assertMatch({error, whatever},
+        call_server(Client, throw, [{error, whatever}])),
+    ?assertMatch({error, {type, value}},
+        call_server(Client, throw, [{error, {type, value}}])).
 
 erlang_error([Client]) ->
-    {error, Reason} = call_server(Client, error, [badarg]),
-    ?assertMatch(badarg, Reason).
+    ?assertMatch({error, badarg}, call_server(Client, error, [badarg])).
 
 %% ===================================================================
 %% Helpers
