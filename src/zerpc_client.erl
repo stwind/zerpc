@@ -10,6 +10,7 @@
 
 -export([start_link/1]).
 -export([request/2]).
+-export([request/3]).
 
 -define(TIMEOUT, 10000).
 
