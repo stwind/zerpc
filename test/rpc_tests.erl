@@ -40,6 +40,8 @@ zerpc_test_() ->
 
 pingpong([Client]) ->
     ?assertMatch(pong, call_server(Client, ping, [])),
+    ?assertMatch(ping, call_server(Client, pong, [])),
+    ?assertMatch(pong, call_server(Client, ping, [])),
     ?assertMatch(ping, call_server(Client, pong, [])).
 
 error_return([Client]) ->
