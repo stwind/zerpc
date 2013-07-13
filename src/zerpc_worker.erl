@@ -5,10 +5,11 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, 
         code_change/3]).
 
+-include("internal.hrl").
 -include_lib("eunit/include/eunit.hrl").
 
 -export([start_link/1]).
--export([do/2]).
+-export([do/1]).
 
 -record(state, { 
         middlewares = [] :: list(module())
@@ -21,8 +22,15 @@
 start_link(Options) ->
     gen_server:start_link(?MODULE, Options, []).
 
-do(Pid, Req) ->
-    gen_server:cast(Pid, {request, Req}).
+do(Req) ->
+    case poolboy:checkout(?SERVER_POOL, false) of
+        full ->
+            Reply = zerpc_proto:error({server, 300, system_busy, node(), []}),
+            zerpc_req:reply(Reply, Req);
+        Worker ->
+            gen_server:cast(Worker, {request, Req}),
+            poolboy:checkin(?SERVER_POOL, Worker)
+    end.
 
 %% ===================================================================
 %% gen_server

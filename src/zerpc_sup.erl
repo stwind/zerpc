@@ -60,8 +60,7 @@ client(Context, {Name, Options}) ->
         {recv_timeout, zerpc_util:get_env(recv_timeout, 5000)}
     ],
     Id = list_to_atom("zerpc_woker_pool_" ++ atom_to_list(Name)),
-    {Id, {poolboy, start_link, [PoolArgs, WorkerArgs]},
-        permanent, 5000, worker, [poolboy]}.
+    poolboy:child_spec(Id, PoolArgs, WorkerArgs).
 
 server(Context) ->
     Endpoint = zerpc_util:get_env(endpoint, "tcp://*:5556"),
@@ -82,5 +81,4 @@ worker_pool() ->
     ],
     Hooks = zerpc_util:get_env(middlewares, [zerpc_mfa,zerpc_log]),
     WorkerArgs = [{middlewares, Hooks}],
-    {zerpc_woker_pool, {poolboy, start_link, [PoolArgs, WorkerArgs]},
-        permanent, 5000, worker, [poolboy]}.
+    poolboy:child_spec(zerpc_woker_pool, PoolArgs, WorkerArgs).

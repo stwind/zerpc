@@ -54,6 +54,4 @@ terminate(_Reason, _State) ->
 %% ===================================================================
 
 handle_msg(Req) ->
-    Worker = poolboy:checkout(?SERVER_POOL),
-    ok = zerpc_worker:do(Worker, Req),
-    poolboy:checkin(?SERVER_POOL, Worker).
+    zerpc_worker:do(Req).
