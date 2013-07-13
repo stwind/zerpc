@@ -38,7 +38,7 @@ request(Pool, Req, Timeout) ->
         Result -> Result
     catch
         exit:{timeout, _} ->
-            {error, {timeout, gen_server}};
+            {error, {timeout, Pool}};
         _:Exn ->
             {error, Exn}
     after
