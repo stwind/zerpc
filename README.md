@@ -54,32 +54,23 @@ And we start another vm, and start zerpc in client mode, with cookie `client`. T
 
 ## Settings
 
-### Server
-
-```
+```erlang
 {zerpc, [
-	{mode, server},
-	{endpoints, "tcp://127.0.0.1:5566"},
-	{size, 100}
-]}
-```
-
-### Client
-
-```
-{zerpc, [
-    {mode, client},
-    {pools, [
-        {p1, [
-            {endpoint, "tcp://127.0.0.1:5566"},
+    {client, [
+        {pools, [
+            {zep1, [
+                {send_timeout, 5000},
+                {recv_timeout, 5000},
+                {endpoint, "tcp://127.0.0.1:5566"},
+                {size, 5}
+            ]}
+        ]}
+    ]},
+    {server, [
+            {endpoint, "tcp://*:5566"},
             {size, 5}
-          ]},
-        {p2, [
-            {endpoint, "tcp://127.0.0.1:5566"},
-            {size, 5}
-          ]}
-      ]}
-  ]}
+        ]}
+    ]}
 ```
 
 ## Development
