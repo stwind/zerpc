@@ -33,16 +33,20 @@ request(Pool, Req) ->
     request(Pool, Req, ?TIMEOUT).
 
 request(Pool, Req, Timeout) ->
-    Worker = poolboy:checkout(Pool),
-    try gen_server:call(Worker, {request, Req}, Timeout) of
-        Result -> Result
-    catch
-        exit:{timeout, _} ->
-            {error, {timeout, Pool}};
-        _:Exn ->
-            {error, Exn}
-    after
-        poolboy:checkin(Pool, Worker)
+    case poolboy:checkout(Pool, false) of
+        full ->
+            {error, {system_busy, node()}};
+        Worker ->
+            try gen_server:call(Worker, {request, Req}, Timeout) of
+                Result -> Result
+                catch
+                    exit:{timeout, _} ->
+                        {error, {timeout, Pool}};
+                    _:Exn ->
+                        {error, Exn}
+                after
+                    poolboy:checkin(Pool, Worker)
+            end
     end.
 
 %% ===================================================================
