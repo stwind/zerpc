@@ -86,17 +86,18 @@ terminate(_Reason, State) ->
 %% Private
 %% ===================================================================
 
-do_request(Req, #state{socket = Socket, rcvtimeo = Timeout} = State) ->
+do_request(Req, #state{socket = Socket, endpoint = Endpoint, 
+        rcvtimeo = Timeout} = State) ->
     case erlzmq:send(Socket, Req) of
         {error, eagain} ->
-            {{error, send_timeout}, State};
+            {{error, {send_timeout, Endpoint}}, State};
         ok ->
             receive
                 {zmq, Socket, Resp, []} ->
                     {{ok, Resp}, State}
             after Timeout ->
                 ok = erlzmq:close(Socket),
-                {{error, recv_timeout}, open_socket(State)}
+                {{error, {recv_timeout, Endpoint}}, open_socket(State)}
             end;
         {error, Reason} ->
             {{error, Reason}, State}
